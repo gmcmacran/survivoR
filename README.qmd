@@ -1,5 +1,5 @@
 ---
-format: html
+format: gfm
 ---
 
 ## Repo Overview
@@ -20,6 +20,7 @@ library(ggplot2)
 library(scales)
 library(dplyr)
 library(ggfortify)
+library(GGally)
 ```
 
 ## Censoring
@@ -80,8 +81,7 @@ km_fit <- survfit(Surv(lenfol, fstat) ~ 1, data = whas500)
 
 temp <- tibble(Time = km_fit$time, Surv = km_fit$surv)
 
-ggplot(temp, aes(x = Time, y = Surv)) +
-  geom_step() +
+ggsurv(s = km_fit, CI = FALSE) +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
   labs(title = "Kaplan-Meier Survival Curve", x = "Time", y = "Proportion of People Alive")
@@ -97,9 +97,7 @@ whas500_02 <- whas500 %>%
   mutate(chf = factor(if_else(chf == 1, "Yes", "No")))
 km_fit_02 <- survfit(Surv(lenfol, fstat) ~ chf, data = whas500_02)
 
-temp <- tibble(Time = km_fit_02$time, Surv = km_fit_02$surv, Strata = c(rep("No", 304), rep("Yes", 130)))
-ggplot(temp, aes(x = Time, y = Surv, color = Strata)) +
-  geom_step() +
+ggsurv(s = km_fit_02, CI = FALSE) +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
   labs(title = "Congestive Heart Complications", y = "Proportion of People Alive")
@@ -134,9 +132,7 @@ cox <- coxph(Surv(lenfol, fstat) ~ age + chf + sho + gender + mitype, data = wha
 # summary(cox)
 
 cox_fit <- survfit(cox)
-temp <- tibble(Time = cox_fit$time, Surv = cox_fit$surv)
-ggplot(temp, aes(x = Time, y = Surv)) +
-  geom_step() +
+ggsurv(s = cox_fit, CI = FALSE) +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
   labs(title = "Cox Proportional Hazards Survival Curve", y = "Proportion of People Alive")
@@ -150,7 +146,7 @@ According to this model, an estimated 70% of patients live at least 3.25 years a
 summary(cox)$coefficients
 ```
 
-According to the model (and ignoring the inflated type I error rate), risk of death increases with:
+Ignoring the inflated type I error rate, risk of death increases with:
 
 * Increases in age
 * Congestive heart complications
