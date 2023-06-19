@@ -18,9 +18,11 @@ ncol(whas500) == 22
 # dates
 ##############
 whas500 %>%
-  mutate(admitdata = mdy(admitdata),
-         disdate = mdy(disdate),
-         fdate = mdy(fdate))
+  mutate(
+    admitdata = mdy(admitdata),
+    disdate = mdy(disdate),
+    fdate = mdy(fdate)
+  )
 
 ##############
 # Sanity check variables
@@ -40,6 +42,10 @@ whas500 <- whas500 %>%
     year == 2 ~ 1999,
     year == 3 ~ 2001
   ))
+
+# days to years
+whas500 <- whas500 %>%
+  mutate(lenfol = lenfol / 365.25)
 
 ##############
 # save
