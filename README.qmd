@@ -1,0 +1,180 @@
+---
+format: gfm
+---
+
+## Repo Overview
+
+This repo explores two classic statistical models for survival analysis using patients who experienced myocardial infarctions.
+
+Models:
+
+-   Kaplan-Meier
+-   Cox Proportional Hazards
+
+```{r}
+#| include: false
+library(tidyverse)
+library(survival)
+library(StepReg)
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(ggfortify)
+library(GGally)
+```
+
+## Censoring
+
+Right censoring occurs when the event of interest is yet to be observed for some data. Examples include time to death for patients with a terminal illness, time to relapse for patients in rehab, or time to service termination for customers. Here are three hypothetical data points.
+
+```{r}
+#| echo: false
+tibble(Time = c(1, 2, 3), Event = c(0, 1, 1))
+```
+
+The average of time is not two. Due to the first observation being censored, the average is **at least** two. Unless all data points are uncensored, this "at least" affects all summary statistics, hypothesis tests, and models. Survival analysis is the area of statistics designed to deal with this notion of "at least" inherent in the data.
+
+## Data Overview
+
+The data set includes 500 patients who suffered a heart attack.
+
+Variables:
+
+-   id - Identification Code (1 - 500)
+-   age - Age at Hospital Admission (years)
+-   gender - Gender (0 = Male, 1 = Female)
+-   hr - Initial Heart Rate (Beats per minute)
+-   sysbp - Initial Systolic Blood Pressure (mmHg)
+-   diasbp - Initial Diastolic Blood (mmHg)
+-   bmi - Body Mass Index (kg/m\^2)
+-   cvd - History of Cardiovascular Disease (0 = No, 1 = Yes)
+-   afb - Atrial Fibrillation (0 = No, 1 = Yes)
+-   sho - Cardiogenic Shock (0 = No, 1 = Yes)
+-   chf - Congestive Heart Complications (0 = No, 1 = Yes)
+-   av3 - Complete Heart Block (0 = No, 1 = Yes)
+-   miord - MI Order (0 = First, 1 = Recurrent)
+-   mitype - MI Type (0 = non Q-wave, 1 = Q-wave)
+-   year - Cohort Year
+-   admitdate - Hospital Admission Date
+-   disdate - Hospital Discharge Date
+-   fdate - Date of last Follow Up
+-   los - Length of Hospital Stay
+-   dstat - Discharge Status from Hospital (0 = Alive, 1 = Dead)
+-   lenfol - Total Length of Follow-up
+-   fstat - Vital Status at Last Follow-up (0 = Alive 1 = Dead)
+
+The first ten rows look like
+
+```{r}
+#| echo: false
+whas500 <- readRDS("data/clean_data.rds")
+print(whas500)
+```
+
+## Kaplan-Meier Model
+
+The Kaplan-Meier model is a non-parametric model. This model makes no distributional assumptions about survival time. The main output is a survival curve.
+
+```{r}
+#| echo: false
+km_fit <- survfit(Surv(lenfol, fstat) ~ 1, data = whas500)
+
+temp <- tibble(Time = km_fit$time, Surv = km_fit$surv)
+
+ggsurv(s = km_fit, CI = FALSE) +
+  scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
+  scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
+  labs(title = "Kaplan-Meier Survival Curve", x = "Time", y = "Proportion of People Alive")
+```
+
+According to the curve, an estimated 70% of patients live at least 1.25 years after being admitted to the hospital for a myocardial infarction.
+
+The KM approach can be used to compare different groups. Are congestive heart complications associated with worse survival? Visually, the green survival curve is much lower than the red survival curve indicating patients with complications die sooner than patients without.
+
+```{r}
+#| echo: false
+whas500_02 <- whas500 %>%
+  mutate(chf = factor(if_else(chf == 1, "Yes", "No")))
+km_fit_02 <- survfit(Surv(lenfol, fstat) ~ chf, data = whas500_02)
+
+ggsurv(s = km_fit_02, CI = FALSE) +
+  scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
+  scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
+  labs(title = "Congestive Heart Complications", y = "Proportion of People Alive")
+```
+
+Could this difference in survival be attributed to random chance alone? The log rank test shows a p-value below 5% indicating no. Complications are associated with worse survival.
+
+```{r}
+#| echo: false
+survdiff(Surv(lenfol, fstat) ~ afb, data = whas500_02)
+```
+
+
+The Kaplan-Meier model can be used as a descriptive tool or a inference tool. For inference, all other factors are ignored. This possible issue is addressed by the next model.
+
+# Cox Proportional Hazards Model
+
+The Cox Proportional Hazards model is an inference tool that controls other variables that possibly influence survival time. It does this my assuming a semi-parametric relationship between the hazard function and explanatory variables. With this model, a survival curve can be calculated. 
+
+```{r}
+#| echo: false
+# stepwise search
+temp <- stepwiseCox(
+  formula = Surv(lenfol, fstat) ~ age + gender + hr + sysbp + diasbp + bmi + cvd + afb + sho + chf + av3 + miord + mitype,
+  data = whas500,
+  selection = "bidirection",
+  select = "AIC"
+)
+# temp[["Selected Varaibles"]]
+
+cox <- coxph(Surv(lenfol, fstat) ~ age + chf + sho + gender + mitype, data = whas500)
+# summary(cox)
+
+cox_fit <- survfit(cox)
+ggsurv(s = cox_fit, CI = FALSE) +
+  scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
+  scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
+  labs(title = "Cox Proportional Hazards Survival Curve", y = "Proportion of People Alive")
+```
+According to this model, an estimated 70% of patients live at least 3.25 years after being admitted.
+
+
+
+```{r}
+#| echo: false
+summary(cox)$coefficients
+```
+
+Ignoring the inflated type I error rate, risk of death increases with:
+
+* Increases in age
+* Congestive heart complications
+* Cardiogenic shock
+
+Risk of death decreases with:
+
+* Being male
+* Having a Q-wave heart attack instead of a non Q wave.
+
+Note Q-wave itself may not be protective. It is possible Q-wave heart attacks are easier to identify leading to earlier patient escalation and therefore better survival.
+
+# Survival Curve Comparison
+
+The two models lead to meaningfully different survival curves. This is due to the difference in model assumptions. Under the hood, the Proportional Hazards model uses the Nelson-Aalen estimator of survival instead of the Kaplan-Meier estimator.
+
+```{r}
+#| echo: false
+plot_df <- rbind(
+  tibble(Time = km_fit$time, Surv = km_fit$surv, Model = rep("KM", length(km_fit$time))),
+  tibble(Time = cox_fit$time, Surv = cox_fit$surv, Model = rep("Cox", length(cox_fit$time)))
+)
+
+ggplot(plot_df, aes(x = Time, y = Surv, color = Model)) +
+  geom_step() +
+  scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
+  scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
+  labs(title = "Model Survival Curves", y = "Proportion of People Alive")
+```
+
+The K.M. estimator will never be greater than the N.A. estimator. Depending on observed data, it is possible the two estimators are functionally equal.
