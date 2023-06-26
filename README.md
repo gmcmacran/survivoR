@@ -162,7 +162,7 @@ The K.M. estimator will never be greater than the N.A. estimator.
 Depending on observed data, it is possible the two estimators are
 functionally equal.
 
-# Other tools
+# Other Tools
 
 This repo focuses on the two main tools of survival analysis used in
 medical research. Accelerated Failure Time (A.F.T.) models and tree
@@ -172,6 +172,6 @@ the models to estimate median failure time which is something the Cox
 Proportional Hazards model cannot do. Tree based methods take the
 likelihood functions used by other survival models (either Cox or
 A.F.T.) and replace the weighted sum of covariates with tree functions.
-With these new loss functions, training boosted models or random forests
-continue as usual. At time of writing, XGBoost has the functionality
-while LightGBM has it on the to-do list.
+With these new loss functions, training boosted models or random forest
+models continue as usual. At time of writing, XGBoost has the
+functionality while LightGBM has it on the to-do list.
