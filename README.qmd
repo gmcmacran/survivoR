@@ -45,7 +45,7 @@ Variables:
 -   gender - Gender (0 = Male, 1 = Female)
 -   hr - Initial Heart Rate (Beats per minute)
 -   sysbp - Initial Systolic Blood Pressure (mmHg)
--   diasbp - Initial Diastolic Blood (mmHg)
+-   diasbp - Initial Diastolic Blood Pressure (mmHg)
 -   bmi - Body Mass Index (kg/m\^2)
 -   cvd - History of Cardiovascular Disease (0 = No, 1 = Yes)
 -   afb - Atrial Fibrillation (0 = No, 1 = Yes)
@@ -115,7 +115,7 @@ The Kaplan-Meier model can be used as a descriptive tool or a inference tool. Fo
 
 # Cox Proportional Hazards Model
 
-The Cox Proportional Hazards model is an inference tool that controls other variables that possibly influence survival time. It does this my assuming a semi-parametric relationship between the hazard function and explanatory variables. With this model, a survival curve can be calculated. 
+The Cox Proportional Hazards model is an inference tool that controls other variables that possibly influence survival time. It does this by assuming a semi-parametric relationship between the hazard function and explanatory variables. With this model, a survival curve can be calculated. 
 
 ```{r}
 #| echo: false
@@ -155,7 +155,7 @@ Ignoring the inflated type I error rate, risk of death increases with:
 Risk of death decreases with:
 
 * Being male
-* Having a Q-wave heart attack instead of a non Q wave.
+* Having a Q-wave heart attack instead of a non Q-wave.
 
 Note Q-wave itself may not be protective. It is possible Q-wave heart attacks are easier to identify leading to earlier patient escalation and therefore better survival.
 
@@ -178,3 +178,7 @@ ggplot(plot_df, aes(x = Time, y = Surv, color = Model)) +
 ```
 
 The K.M. estimator will never be greater than the N.A. estimator. Depending on observed data, it is possible the two estimators are functionally equal.
+
+# Other tools
+
+This repo focuses on the two main tools of survival analysis used in medical research. Accelerated Failure Time (A.F.T.) models and tree based methods are two other approaches. A.F.T. models make a fully parametric assumption between covariates and failure time. This allows the models to estimate median failure time which is something the Cox Proportional Hazards model cannot do. Tree based methods take the likelihood functions used by other survival models (either Cox or A.F.T.) and replace the weighted sum of covariates with tree functions. With these new loss functions, training boosted models or random forests continue as usual. At time of writing, XGBoost has the functionality while LightGBM has it on the to-do list.
