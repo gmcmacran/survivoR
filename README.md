@@ -127,11 +127,12 @@ calculated.
 According to this model, an estimated 70% of patients live at least 3.25
 years after being admitted.
 
-Survival is much worse for patients with complications. Note the two
-survival curves have the exact same curvature. This is due to the
-proportional hazard assumption of the Cox model.
+Survival is worse for patients with complications.
 
 ![](README_files/figure-commonmark/unnamed-chunk-8-1.png)
+
+Note the two survival curves have the exact same curvature. This is due
+to the proportional hazard assumption of the Cox model.
 
 Controlling for other variables, complications are associated with worse
 survival.

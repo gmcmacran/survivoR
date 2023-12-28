@@ -140,7 +140,7 @@ ggsurv(s = cox_fit, CI = FALSE) +
 According to this model, an estimated 70% of patients live at least 3.25 years after being admitted.
 
 
-Survival is much worse for patients with complications. Note the two survival curves have the exact same curvature. This is due to the proportional hazard assumption of the Cox model. 
+Survival is worse for patients with complications.
 ```{r}
 #| echo: false
 
@@ -181,6 +181,7 @@ ggplot(graph_df, aes(x = time, y = surv, group = chf, color = chf)) +
   labs(title = "Cox Proportional Hazards Survival Curve", y = "Proportion of People Alive")
 ```
 
+Note the two survival curves have the exact same curvature. This is due to the proportional hazard assumption of the Cox model. 
 
 Controlling for other variables, complications are associated with worse survival.
 
