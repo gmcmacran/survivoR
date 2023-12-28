@@ -127,27 +127,18 @@ calculated.
 According to this model, an estimated 70% of patients live at least 3.25
 years after being admitted.
 
-                  coef exp(coef)    se(coef)         z     Pr(>|z|)
-    age     0.05723802 1.0589078 0.006417813  8.918617 4.721482e-19
-    chf     0.84655007 2.3315891 0.144915759  5.841670 5.168004e-09
-    sho     1.05101250 2.8605460 0.267750715  3.925340 8.660745e-05
-    gender -0.18200553 0.8335967 0.141142629 -1.289515 1.972191e-01
-    mitype -0.41349385 0.6613356 0.178263485 -2.319566 2.036439e-02
+Survival is worse for patients with complications.
 
-Ignoring the inflated type I error rate, risk of death increases with:
+![](README_files/figure-commonmark/unnamed-chunk-8-1.png)
 
-- Increases in age
-- Congestive heart complications
-- Cardiogenic shock
+Note the two survival curves have the exact same curvature. This is due
+to the proportional hazard assumption of the Cox model.
 
-Risk of death decreases with:
+Controlling for other variables, complications are associated with worse
+survival.
 
-- Being male
-- Having a Q-wave heart attack instead of a non Q-wave.
-
-Note Q-wave itself may not be protective. It is possible Q-wave heart
-attacks are easier to identify leading to earlier patient escalation and
-therefore better survival.
+            coef    exp(coef)     se(coef)            z     Pr(>|z|) 
+    8.465501e-01 2.331589e+00 1.449158e-01 5.841670e+00 5.168004e-09 
 
 # Survival Curve Comparison
 
@@ -156,7 +147,7 @@ due to the difference in model assumptions. Under the hood, the
 Proportional Hazards model uses the Nelson-Aalen estimator of survival
 instead of the Kaplan-Meier estimator.
 
-![](README_files/figure-commonmark/unnamed-chunk-9-1.png)
+![](README_files/figure-commonmark/unnamed-chunk-10-1.png)
 
 The K.M. estimator will never be greater than the N.A. estimator.
 Depending on observed data, it is possible the two estimators are
@@ -166,12 +157,14 @@ functionally equal.
 
 This repo focuses on the two main tools of survival analysis used in
 medical research. Accelerated Failure Time (A.F.T.) models and tree
-based methods are two other approaches. A.F.T. models make a fully
-parametric assumption between covariates and failure time. This allows
-the models to estimate median failure time which is something the Cox
-Proportional Hazards model cannot do. Tree based methods take the
-likelihood functions used by other survival models (either Cox or
-A.F.T.) and replace the weighted sum of covariates with tree functions.
-With these new loss functions, training boosted models or random forest
-models continue as usual. At time of writing, XGBoost has the
-functionality while LightGBM has it on the to-do list.
+based methods are two other approaches.
+
+A.F.T. models make a fully parametric assumption between covariates and
+failure time. This allows the models to estimate median failure time
+which is something the Cox Proportional Hazards model cannot do.
+
+Tree based methods take the likelihood functions used by other survival
+models (either Cox or A.F.T.) and replace the weighted sum of covariates
+with tree functions. With these new loss functions, training boosted
+models or random forest models continue as usual. At time of writing,
+XGBoost has the functionality while LightGBM has it on the to-do list.

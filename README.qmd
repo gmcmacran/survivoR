@@ -140,24 +140,58 @@ ggsurv(s = cox_fit, CI = FALSE) +
 According to this model, an estimated 70% of patients live at least 3.25 years after being admitted.
 
 
+Survival is worse for patients with complications.
+```{r}
+#| echo: false
+
+# Making my own graph b/c ggsurv only does KM model.
+temp <- whas500 %>%
+  summarise(across(.cols = c(age, chf, sho, gender, mitype), .fns = mean))
+temp <- temp %>%
+  mutate(sho = if_else(sho <.5, 0, 1),
+         gender = if_else(gender <.5, 0, 1),
+         mitype = if_else(mitype <.5, 0, 1))
+temp <- bind_rows(
+  temp %>% mutate(chf = 0),
+  temp %>% mutate(chf = 1)
+)
+
+cox_fit_02 <- survfit(cox, newdata = temp)
+
+graph_df <- tibble(
+  chf = c(rep("no", length(cox_fit_02$time)), rep("yes", length(cox_fit_02$time))),
+  time = rep(cox_fit_02$time, 2),
+  surv = c(cox_fit_02$surv[,1], cox_fit_02$surv[,2])
+)
+
+temp <- bind_rows(
+  tibble(chf = "yes", time = 0, surv = 1),
+  tibble(chf = "no", time = 0, surv = 1)
+)
+graph_df = graph_df %>%
+  bind_rows(temp) %>%
+  arrange(chf, time, surv)
+graph_df <- graph_df %>%
+  mutate(factor(chf))
+
+ggplot(graph_df, aes(x = time, y = surv, group = chf, color = chf)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
+  scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
+  labs(title = "Cox Proportional Hazards Survival Curve", y = "Proportion of People Alive")
+```
+
+Note the two survival curves have the exact same curvature. This is due to the proportional hazard assumption of the Cox model. 
+
+Controlling for other variables, complications are associated with worse survival.
 
 ```{r}
 #| echo: false
-summary(cox)$coefficients
+temp <- summary(cox)$coefficients
+temp <- temp[rownames(temp) == "chf", ]
+temp
 ```
 
-Ignoring the inflated type I error rate, risk of death increases with:
-
-* Increases in age
-* Congestive heart complications
-* Cardiogenic shock
-
-Risk of death decreases with:
-
-* Being male
-* Having a Q-wave heart attack instead of a non Q-wave.
-
-Note Q-wave itself may not be protective. It is possible Q-wave heart attacks are easier to identify leading to earlier patient escalation and therefore better survival.
 
 # Survival Curve Comparison
 
@@ -181,4 +215,8 @@ The K.M. estimator will never be greater than the N.A. estimator. Depending on o
 
 # Other Tools
 
-This repo focuses on the two main tools of survival analysis used in medical research. Accelerated Failure Time (A.F.T.) models and tree based methods are two other approaches. A.F.T. models make a fully parametric assumption between covariates and failure time. This allows the models to estimate median failure time which is something the Cox Proportional Hazards model cannot do. Tree based methods take the likelihood functions used by other survival models (either Cox or A.F.T.) and replace the weighted sum of covariates with tree functions. With these new loss functions, training boosted models or random forest models continue as usual. At time of writing, XGBoost has the functionality while LightGBM has it on the to-do list.
+This repo focuses on the two main tools of survival analysis used in medical research. Accelerated Failure Time (A.F.T.) models and tree based methods are two other approaches. 
+
+A.F.T. models make a fully parametric assumption between covariates and failure time. This allows the models to estimate median failure time which is something the Cox Proportional Hazards model cannot do. 
+
+Tree based methods take the likelihood functions used by other survival models (either Cox or A.F.T.) and replace the weighted sum of covariates with tree functions. With these new loss functions, training boosted models or random forest models continue as usual. At time of writing, XGBoost has the functionality while LightGBM has it on the to-do list.
