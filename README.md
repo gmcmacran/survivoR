@@ -119,23 +119,22 @@ is addressed by the next model.
 The Cox Proportional Hazards model is an inference tool that controls
 other variables that possibly influence survival time. It does this by
 assuming a semi-parametric relationship between the hazard function and
-explanatory variables. With this model, a survival curve can be
-calculated.
+explanatory variables. With these data, a survival curve is
 
 ![](README_files/figure-commonmark/unnamed-chunk-7-1.png)
 
 According to this model, an estimated 70% of patients live at least 3.25
 years after being admitted.
 
-Survival is worse for patients with complications.
+Under the Cox model, survival is worse for patients with complications.
 
 ![](README_files/figure-commonmark/unnamed-chunk-8-1.png)
 
 Note the two survival curves have the exact same curvature. This is due
 to the proportional hazard assumption of the Cox model.
 
-Controlling for other variables, complications are associated with worse
-survival.
+Controlling for other variables, the conclusion is the same.
+Complications are associated with worse survival.
 
             coef    exp(coef)     se(coef)            z     Pr(>|z|) 
     8.465501e-01 2.331589e+00 1.449158e-01 5.841670e+00 5.168004e-09 

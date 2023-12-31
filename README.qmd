@@ -100,7 +100,7 @@ km_fit_02 <- survfit(Surv(lenfol, fstat) ~ chf, data = whas500_02)
 ggsurv(s = km_fit_02, CI = FALSE) +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
-  labs(title = "Congestive Heart Complications", y = "Proportion of People Alive")
+  labs(title = "Congestive Heart Complications (KM)", y = "Proportion of People Alive")
 ```
 
 Could this difference in survival be attributed to random chance alone? The log rank test shows a p-value below 5% indicating no. Complications are associated with worse survival.
@@ -115,7 +115,7 @@ The Kaplan-Meier model can be used as a descriptive tool or a inference tool. Fo
 
 # Cox Proportional Hazards Model
 
-The Cox Proportional Hazards model is an inference tool that controls other variables that possibly influence survival time. It does this by assuming a semi-parametric relationship between the hazard function and explanatory variables. With this model, a survival curve can be calculated. 
+The Cox Proportional Hazards model is an inference tool that controls other variables that possibly influence survival time. It does this by assuming a semi-parametric relationship between the hazard function and explanatory variables. With these data, a survival curve is
 
 ```{r}
 #| echo: false
@@ -126,6 +126,7 @@ temp <- stepwiseCox(
   selection = "bidirection",
   select = "AIC"
 )
+
 # temp[["Selected Varaibles"]]
 
 cox <- coxph(Surv(lenfol, fstat) ~ age + chf + sho + gender + mitype, data = whas500)
@@ -140,7 +141,7 @@ ggsurv(s = cox_fit, CI = FALSE) +
 According to this model, an estimated 70% of patients live at least 3.25 years after being admitted.
 
 
-Survival is worse for patients with complications.
+Under the Cox model, survival is worse for patients with complications.
 ```{r}
 #| echo: false
 
@@ -148,9 +149,11 @@ Survival is worse for patients with complications.
 temp <- whas500 %>%
   summarise(across(.cols = c(age, chf, sho, gender, mitype), .fns = mean))
 temp <- temp %>%
-  mutate(sho = if_else(sho <.5, 0, 1),
-         gender = if_else(gender <.5, 0, 1),
-         mitype = if_else(mitype <.5, 0, 1))
+  mutate(
+    sho = if_else(sho < .5, 0, 1),
+    gender = if_else(gender < .5, 0, 1),
+    mitype = if_else(mitype < .5, 0, 1)
+  )
 temp <- bind_rows(
   temp %>% mutate(chf = 0),
   temp %>% mutate(chf = 1)
@@ -161,14 +164,14 @@ cox_fit_02 <- survfit(cox, newdata = temp)
 graph_df <- tibble(
   chf = c(rep("no", length(cox_fit_02$time)), rep("yes", length(cox_fit_02$time))),
   time = rep(cox_fit_02$time, 2),
-  surv = c(cox_fit_02$surv[,1], cox_fit_02$surv[,2])
+  surv = c(cox_fit_02$surv[, 1], cox_fit_02$surv[, 2])
 )
 
 temp <- bind_rows(
   tibble(chf = "yes", time = 0, surv = 1),
   tibble(chf = "no", time = 0, surv = 1)
 )
-graph_df = graph_df %>%
+graph_df <- graph_df %>%
   bind_rows(temp) %>%
   arrange(chf, time, surv)
 graph_df <- graph_df %>%
@@ -178,12 +181,12 @@ ggplot(graph_df, aes(x = time, y = surv, group = chf, color = chf)) +
   geom_line() +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
-  labs(title = "Cox Proportional Hazards Survival Curve", y = "Proportion of People Alive")
+  labs(title = "Congestive Heart Complications (Cox)", y = "Proportion of People Alive")
 ```
 
 Note the two survival curves have the exact same curvature. This is due to the proportional hazard assumption of the Cox model. 
 
-Controlling for other variables, complications are associated with worse survival.
+Controlling for other variables, the conclusion is the same. Complications are associated with worse survival.
 
 ```{r}
 #| echo: false
