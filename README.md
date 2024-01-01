@@ -136,8 +136,8 @@ to the proportional hazard assumption of the Cox model.
 Controlling for other variables, the conclusion is the same.
 Complications are associated with worse survival.
 
-            coef    exp(coef)     se(coef)            z     Pr(>|z|) 
-    8.465501e-01 2.331589e+00 1.449158e-01 5.841670e+00 5.168004e-09 
+            coef            z     Pr(>|z|) 
+    8.465501e-01 5.841670e+00 5.168004e-09 
 
 # Survival Curve Comparison
 
@@ -159,8 +159,10 @@ medical research. Accelerated Failure Time (A.F.T.) models and tree
 based methods are two other approaches.
 
 A.F.T. models make a fully parametric assumption between covariates and
-failure time. This allows the models to estimate median failure time
-which is something the Cox Proportional Hazards model cannot do.
+failure time. This allows the models to estimate median failure time for
+each data point. The Kaplan-Meier model and Cox Proportional Hazards
+model can only estimate median failure time for the population, not the
+individual.
 
 Tree based methods take the likelihood functions used by other survival
 models (either Cox or A.F.T.) and replace the weighted sum of covariates
