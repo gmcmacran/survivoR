@@ -1,4 +1,5 @@
 
+
 ## Repo Overview
 
 This repo explores two classic statistical models for survival analysis
@@ -110,9 +111,10 @@ are associated with worse survival.
 
      Chisq= 10.9  on 1 degrees of freedom, p= 0.001 
 
-The Kaplan-Meier model can be used as a descriptive tool or a inference
-tool. For inference, all other factors are ignored. This possible issue
-is addressed by the next model.
+The Kaplan-Meier model works well for one grouping variable (congestive
+heart complications in this case). As more explanatory variables are
+added, the process of grouping by all levels of all variables breaks
+down. Groups become extremely small. A different approach is needed.
 
 # Cox Proportional Hazards Model
 
@@ -130,9 +132,6 @@ Under the Cox model, survival is worse for patients with complications.
 
 ![](README_files/figure-commonmark/unnamed-chunk-8-1.png)
 
-Note the two survival curves have the exact same curvature. This is due
-to the proportional hazard assumption of the Cox model.
-
 Controlling for other variables, the conclusion is the same.
 Complications are associated with worse survival.
 
@@ -148,9 +147,9 @@ instead of the Kaplan-Meier estimator.
 
 ![](README_files/figure-commonmark/unnamed-chunk-10-1.png)
 
-The K.M. estimator will never be greater than the N.A. estimator.
-Depending on observed data, it is possible the two estimators are
-functionally equal.
+The K.M. estimator will always be less than or equal to the the N.A.
+estimator. Depending on observed data, it is possible the two estimators
+are functionally equal.
 
 # Other Tools
 
@@ -158,11 +157,10 @@ This repo focuses on the two main tools of survival analysis used in
 medical research. Accelerated Failure Time (A.F.T.) models and tree
 based methods are two other approaches.
 
-A.F.T. models make a fully parametric assumption between covariates and
-failure time. This allows the models to estimate median failure time for
-each data point. The Kaplan-Meier model and Cox Proportional Hazards
-model can only estimate median failure time for the population, not the
-individual.
+A.F.T. models assume survival times follow a specific distribution. If
+the assumed distribution fits the data well, A.F.T. models will provide
+smaller confidence intervals for the median and other quantiles of the
+survival curve.
 
 Tree based methods take the likelihood functions used by other survival
 models (either Cox or A.F.T.) and replace the weighted sum of covariates
