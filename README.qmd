@@ -21,6 +21,7 @@ library(scales)
 library(dplyr)
 library(ggfortify)
 library(GGally)
+library(StepReg)
 ```
 
 ## Censoring
@@ -111,7 +112,7 @@ survdiff(Surv(lenfol, fstat) ~ afb, data = whas500_02)
 ```
 
 
-The Kaplan-Meier model can be used as a descriptive tool or a inference tool. For inference, all other factors are ignored. This possible issue is addressed by the next model.
+The Kaplan-Meier model works well for one grouping variable (congestive heart complications in this case). As more explanatory variables are added, the process of grouping by all levels of all variables breaks down. Groups become extremely small. A different approach is needed.
 
 # Cox Proportional Hazards Model
 
@@ -120,11 +121,12 @@ The Cox Proportional Hazards model is an inference tool that controls other vari
 ```{r}
 #| echo: false
 # stepwise search
-temp <- stepwiseCox(
+temp <- stepwise(
   formula = Surv(lenfol, fstat) ~ age + gender + hr + sysbp + diasbp + bmi + cvd + afb + sho + chf + av3 + miord + mitype,
   data = whas500,
-  selection = "bidirection",
-  select = "AIC"
+  type = "cox",
+  strategy = "bidirection",
+  metric = "AICc"
 )
 
 # temp[["Selected Varaibles"]]
@@ -181,10 +183,8 @@ ggplot(graph_df, aes(x = time, y = surv, group = chf, color = chf)) +
   geom_line() +
   scale_x_continuous(breaks = seq(0, 7, .5), limit = c(0, 7)) +
   scale_y_continuous(breaks = seq(0, 1, .10), labels = percent) +
-  labs(title = "Congestive Heart Complications (Cox)", y = "Proportion of People Alive")
+  labs(title = "Congestive Heart Complications (Cox)", x = "Time", y = "Proportion of People Alive")
 ```
-
-Note the two survival curves have the exact same curvature. This is due to the proportional hazard assumption of the Cox model. 
 
 Controlling for other variables, the conclusion is the same. Complications are associated with worse survival.
 
@@ -215,12 +215,12 @@ ggplot(plot_df, aes(x = Time, y = Surv, color = Model)) +
   labs(title = "Model Survival Curves", y = "Proportion of People Alive")
 ```
 
-The K.M. estimator will never be greater than the N.A. estimator. Depending on observed data, it is possible the two estimators are functionally equal.
+The K.M. estimator will always be less than or equal to the the N.A. estimator. Depending on observed data, it is possible the two estimators are functionally equal.
 
 # Other Tools
 
 This repo focuses on the two main tools of survival analysis used in medical research. Accelerated Failure Time (A.F.T.) models and tree based methods are two other approaches. 
 
-A.F.T. models make a fully parametric assumption between covariates and failure time. This allows the models to estimate median failure time for each data point. The Kaplan-Meier model and Cox Proportional Hazards model can only estimate median failure time for the population, not the individual.
+A.F.T. models assume survival times follow a specific distribution. If the assumed distribution fits the data well, A.F.T. models will provide smaller confidence intervals for the median and other quantiles of the survival curve.
 
 Tree based methods take the likelihood functions used by other survival models (either Cox or A.F.T.) and replace the weighted sum of covariates with tree functions. With these new loss functions, training boosted models or random forest models continue as usual. At time of writing, XGBoost has the functionality while LightGBM has it on the to-do list.
